@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(NibletteDisksParser VERSION 0.1 LANGUAGES CXX)
+project(NibletteDisksMapper VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -19,7 +19,7 @@ set(PROJECT_SOURCES
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(NibletteDisksParser
+    qt_add_executable(NibletteDisksMapper
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
         datastruct.h datastruct.cpp
@@ -29,32 +29,32 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         errordialog.h errordialog.cpp
     )
 # Define target properties for Android with Qt 6 as:
-#    set_property(TARGET NibletteDisksParser APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+#    set_property(TARGET NibletteDisksMapper APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
 # For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
 else()
     if(ANDROID)
-        add_library(NibletteDisksParser SHARED
+        add_library(NibletteDisksMapper SHARED
             ${PROJECT_SOURCES}
         )
 # Define properties for Android with Qt 5 after find_package() calls as:
 #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(NibletteDisksParser
+        add_executable(NibletteDisksMapper
             ${PROJECT_SOURCES}
         )
     endif()
 endif()
 
-target_link_libraries(NibletteDisksParser PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
+target_link_libraries(NibletteDisksMapper PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.
 if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.NibletteDisksParser)
+  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.NibletteDisksMapper)
 endif()
-set_target_properties(NibletteDisksParser PROPERTIES
+set_target_properties(NibletteDisksMapper PROPERTIES
     ${BUNDLE_ID_OPTION}
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
@@ -63,12 +63,12 @@ set_target_properties(NibletteDisksParser PROPERTIES
 )
 
 include(GNUInstallDirs)
-install(TARGETS NibletteDisksParser
+install(TARGETS NibletteDisksMapper
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(NibletteDisksParser)
+    qt_finalize_executable(NibletteDisksMapper)
 endif()

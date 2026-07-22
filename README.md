@@ -7,3 +7,32 @@ This means dozens upon dozens of external disks, stacked on shelves. If our phot
 
 Niblette's disk mapper is here to solve exactly that!
 With this tool, you can map your disks, creating a lightweight file that you can then use to view the filetree of the mapped disk and search for specific files/folders by name.
+
+
+Build instructions (windows only, more OS to come):
+
+1 - In a folder, place the "source" folder containing the .h .cpp and the CMakeLists.txt files of this project.
+
+2 - In the same folder, create a "builddir" folder.
+
+3 - Using the Qt installation tool, install a Qt6.11.1 version of Qt (my installation was at C:\Qt)
+
+4 - In a cmd, add those 4 entries to you %PATH% variable:
+      C:\Qt\Tools\CMake_64\bin
+	    C:\Qt\Tools\Ninja
+	    C:\Qt\Tools\mingw1310_64\bin
+	    C:\Qt\6.11.1\mingw_64\bin
+
+5 - With that cmd, go to the folder containg our "sources" and "builddir" folders, and execute the following commands:
+      C:\Qt\6.11.1\mingw_64\bin\qt-cmake.bat -G Ninja -S sources -B builddir 
+      cmake --build builddir
+
+6 - In the builddir folder, grab NibletteDiskMapper.exe and place it in a folder where you want it installed (warning, many files will be created in that folder, we advise to be empty)
+
+7 - Still with the same cmd, execute the following command:
+      C:\Qt\6.11.1\mingw_64\bin\windeployqt6.exe PATH/TO/NibletteDiskMapper.exe
+
+8 - Niblette Disk Mapper should now be ready to use !
+
+
+NOTE: IN the future I plan to directly release statically linked  (ie ready to use) executables.

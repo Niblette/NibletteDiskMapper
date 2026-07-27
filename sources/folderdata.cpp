@@ -1,10 +1,16 @@
 #include "folderdata.h"
 #include "filedata.h"
 
-#include <iostream>
-#include <filesystem>
-
 #include <QTreeWidgetItem>
+#include <QDir>
+#include <QList>
+#include <QFileInfo>
+
+#include <QStringList>
+
+
+#include <iostream>
+
 
 FolderData::FolderData(const std::string& iName)
     : Data(iName)
@@ -22,23 +28,24 @@ void FolderData::addChild(std::shared_ptr<Data> iChild){
 ////////////////////////////////////////
 
 void FolderData::Populate(const std::string& iPath, std::vector<std::string> iFilters ,bool iIsBlackList){
-    std::filesystem::path path(iPath);
-    std::error_code ec;
-    auto dirEntry = std::filesystem::begin(std::filesystem::directory_iterator(path, ec));
-    for (; dirEntry != std::filesystem::end(std::filesystem::directory_iterator(path, ec)); dirEntry.increment(ec)){
-        if (dirEntry->is_directory()){
-            FolderData newFolder(dirEntry->path().string());
-            newFolder.Populate(dirEntry->path().string(), iFilters, iIsBlackList);
+
+    QDir currentDirectory(QString::fromStdString(iPath), "", QDir::Name | QDir::IgnoreCase, QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+
+    QList<QFileInfo> dirContents = currentDirectory.entryInfoList();
+    foreach(auto& entry, dirContents){
+        std::string fullName = entry.absoluteFilePath().toStdString();
+        if (entry.isDir()){
+            FolderData newFolder(fullName);
+            newFolder.Populate(fullName, iFilters, iIsBlackList);
             addChild(std::make_shared<FolderData>(newFolder));
         }
-        else if (dirEntry->is_regular_file()){
-            FileData newFile(dirEntry->path().string(), dirEntry->file_size());
-
+        else if (entry.isFile()){
+            FileData newFile(fullName, entry.size());
             std::string fileExtension = newFile.GetName();
             auto periodPos = fileExtension.find_last_of('.');
             fileExtension = fileExtension.substr(periodPos + 1);
             bool blacklisted = false;
-            for (std::string filter : iFilters){
+            for (auto& filter : iFilters){
                 if (filter == fileExtension){
                     if (iIsBlackList){
                         blacklisted = true;

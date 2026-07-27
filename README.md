@@ -9,7 +9,7 @@ Niblette's disk mapper is here to solve exactly that!
 With this tool, you can map your disks, creating a lightweight file that you can then use to view the filetree of the mapped disk and search for specific files/folders by name.
 
 
-Build instructions (windows only, more OS to come):
+Build instructions windows:
 
 1 - In a folder, place the "source" folder containing the .h .cpp and the CMakeLists.txt files of this project.
 
@@ -34,5 +34,17 @@ Build instructions (windows only, more OS to come):
 
 8 - Niblette Disk Mapper should now be ready to use !
 
+
+FOR MAC:
+
+1 - Download Qt6.11.1, download Cmake and Ninja
+
+2 - in a folder containing the sources folder, create a builddir folder
+
+3 - Execute the following commands:
+
+	cmake -DCMAKE_PREFIX_PATH=/Path/To/Qt/Installation/6.11.1/macos/ -G Ninja -S sources -B builddir
+
+	cmake --build buildir
 
 NOTE: IN the future I plan to directly release statically linked  (ie ready to use) executables.

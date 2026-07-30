@@ -12,7 +12,8 @@ ErrorDialog::ErrorDialog(const std::string& iMssg, QWidget * iParent)
 
     QVBoxLayout * mainLayout = new QVBoxLayout();
 
-    QTextEdit * text = new QTextEdit("iMssg");
+    QTextEdit * text = new QTextEdit();
+    text->insertPlainText(QString::fromStdString(iMssg));
     text->setReadOnly(true);
     mainLayout->addWidget(text);
 

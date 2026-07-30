@@ -3,13 +3,19 @@
 
 #include "datastruct.h"
 
+#include <array>
+
 class FileData: public Data
 {
-public:
-    FileData(const std::string& iName, int iSize);
+    constexpr static std::array<const char*, 7> prefixes = {"B", "KB", "MB", "GB", "TB", "PB", "EB"};
+    constexpr static std::array<std::size_t, 6> sizes = {1'000, 1'000'000, 1'000'000'000, 1'000'000'000'000, 1'000'000'000'000'000, 1'000'000'000'000'000'000};
 
-    int GetSize();
-    void SetSize(int iSize);
+
+public:
+    FileData(const std::string& iName, const std::string& iBirthTime, const std::string& iModifiedTime, std::size_t iSize);
+
+    std::size_t GetSize();
+    void SetSize(std::size_t iSize);
 
     bool PopulateFromXML(const std::string& iXML, std::string& oErrMssg);
 
@@ -19,10 +25,11 @@ public:
 
     bool RemoveEmptyDirectories() override;
 
-    //void print(const std::string& iSpacer) override;
+private:
+    std::string GetHumanReadableSize();
 
 private:
-    int _size;
+    std::size_t _size;
 };
 
 

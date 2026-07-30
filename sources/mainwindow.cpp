@@ -71,8 +71,8 @@ MainWindow::MainWindow(QWidget *parent)
     _treeLayout->addLayout(searchLayout);
 
     _tree = new QTreeWidget();
-    _tree->setColumnCount(3);
-    _tree->setHeaderLabels({"Name", "Size", "Type"});
+    _tree->setColumnCount(4);
+    _tree->setHeaderLabels({"Name", "Date Modified", "Size", "Type"});
     _treeLayout->addWidget(_tree);
 
     QWidget * treeWidget = new QWidget(); // empty widget to be able the put the layout in the splitter
@@ -153,7 +153,7 @@ void MainWindow::NdpSelectionChanged(){
     oss << input.rdbuf();
 
     //create our folder data structure and populate it from the xml data in the ndp file
-    FolderData topFolder("");
+    FolderData topFolder("", "", "");
     std::string errorMssg;
     if (!topFolder.PopulateFromXML(oss.str(), errorMssg)){
         std::string dialogErrorMssg = "Failed to create internal data structure: " + errorMssg;
@@ -192,7 +192,7 @@ void MainWindow::CreateButtonPressed(){
 ////////////////////////////////////////
 
 void MainWindow::CreateAccepted(std::string iPath, std::string iName, std::vector<std::string> iFilters, bool iBlackList, bool iRemoveEmptyFolders){
-    FolderData newFolder(iPath);
+    FolderData newFolder(iPath, "", "");
     newFolder.SetName(iName);
     newFolder.Populate(iPath, iFilters, iBlackList);
 

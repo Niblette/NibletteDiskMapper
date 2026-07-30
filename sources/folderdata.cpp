@@ -5,15 +5,13 @@
 #include <QDir>
 #include <QList>
 #include <QFileInfo>
-
+#include <QDateTime>
 #include <QStringList>
-
 
 #include <iostream>
 
-
-FolderData::FolderData(const std::string& iName)
-    : Data(iName)
+FolderData::FolderData(const std::string& iName, const std::string& iBirthTime, const std::string& iModifiedTime)
+    : Data(iName, iBirthTime, iModifiedTime)
 {}
 ////////////////////////////////////////
 
@@ -30,17 +28,36 @@ void FolderData::addChild(std::shared_ptr<Data> iChild){
 void FolderData::Populate(const std::string& iPath, std::vector<std::string> iFilters ,bool iIsBlackList){
 
     QDir currentDirectory(QString::fromStdString(iPath), "", QDir::Name | QDir::IgnoreCase, QDir::Dirs | QDir::Files | QDir::NoSymLinks | QDir::NoDotAndDotDot);
-
     QList<QFileInfo> dirContents = currentDirectory.entryInfoList();
     foreach(auto& entry, dirContents){
         std::string fullName = entry.absoluteFilePath().toStdString();
+        QDateTime birthTime = entry.birthTime();
+        std::string birthStr = "";
+        if (birthTime.isValid()){
+            birthStr = birthTime.toString().toStdString();
+            auto pos = birthStr.find_first_of(' ');
+            if (pos != std::string::npos){
+                birthStr = birthStr.substr(pos + 1);
+            }
+        }
+
+        QDateTime modifiedTime = entry.lastModified();
+        std::string modifiedStr = "";
+        if (modifiedTime.isValid()){
+            modifiedStr = modifiedTime.toString().toStdString();
+            auto pos = modifiedStr.find_first_of(' ');
+            if (pos != std::string::npos){
+                modifiedStr = modifiedStr.substr(pos + 1);
+            }
+        }
+
         if (entry.isDir()){
-            FolderData newFolder(fullName);
+            FolderData newFolder(fullName, birthStr, modifiedStr);
             newFolder.Populate(fullName, iFilters, iIsBlackList);
             addChild(std::make_shared<FolderData>(newFolder));
         }
         else if (entry.isFile()){
-            FileData newFile(fullName, entry.size());
+            FileData newFile(fullName, birthStr, modifiedStr, entry.size());
             std::string fileExtension = newFile.GetName();
             auto periodPos = fileExtension.find_last_of('.');
             fileExtension = fileExtension.substr(periodPos + 1);
@@ -75,17 +92,36 @@ bool FolderData::PopulateFromXML(const std::string& iXML, std::string& oErrMssg)
             oErrMssg += "FolderData::PopulateFromXML failed to find first '>' in \"" + iXML + "\"";
             return false;
         }
-        std::string firstBalise = tmpStr.substr(0, firstPos + 1);
+        std::string firstBalise = tmpStr.substr(0, firstPos + 1);//<Folder name=TEST birthTime=Jul 30 18:18:01 2026 modifiedTime=Jul 30 18:18:24 2026>
         tmpStr = tmpStr.substr(firstPos + 1);
 
-        auto namePos = firstBalise.find_first_of('=');
-        if (namePos == std::string::npos){
-            oErrMssg += "FolderData::PopulateFromXML failed to find first '=' in \"" + iXML + "\"";
+        auto tmpPos = firstBalise.find("name=");
+        if (tmpPos == std::string::npos){
+            oErrMssg += "FolderData::PopulateFromXML failed to find \"name=\" in \"" + iXML + "\"";
             return false;
         }
-        firstBalise = firstBalise.substr(namePos + 1);
-        firstBalise.pop_back(); // remove trailing '>'
-        SetName(firstBalise);
+        firstBalise = firstBalise.substr(tmpPos + 5);//TEST birthTime=Jul 30 18:18:01 2026 modifiedTime=Jul 30 18:18:24 2026>
+
+        tmpPos = firstBalise.find("birthTime=");
+        if (tmpPos == std::string::npos){
+            oErrMssg += "FolderData::PopulateFromXML failed to find \"birthTime=\" in \"" + iXML + "\"";
+            return false;
+        }
+        std::string name = firstBalise.substr(0, tmpPos - 1);//TEST
+        firstBalise = firstBalise.substr(tmpPos + 10);//Jul 30 18:18:01 2026 modifiedTime=Jul 30 18:18:24 2026>
+
+        tmpPos = firstBalise.find("modifiedTime=");
+        if (tmpPos == std::string::npos){
+            oErrMssg += "FolderData::PopulateFromXML failed to find \"modifiedTime=\" in \"" + iXML + "\"";
+            return false;
+        }
+        std::string birthTime = firstBalise.substr(0, tmpPos - 1);//Jul 30 18:18:01 2026
+        std::string modifiedTime = firstBalise.substr(tmpPos + 13);//Jul 30 18:18:24 2026>
+        modifiedTime.pop_back();//Jul 30 18:18:24 2026
+
+        SetName(name);
+        SetBirthTime(birthTime);
+        SetModifiedTime(modifiedTime);
     }
 
     //Removing last balise
@@ -113,7 +149,7 @@ bool FolderData::PopulateFromXML(const std::string& iXML, std::string& oErrMssg)
         }
         // Balise is a File balise
         else if (nextBalise.find("<File") != std::string::npos){
-            FileData newFile("", 0); // We create a new file
+            FileData newFile("", "", "", 0); // We create a new file
             // fill its data from the xml
             if (!newFile.PopulateFromXML(nextBalise, oErrMssg)){
                 return false;
@@ -138,7 +174,7 @@ bool FolderData::PopulateFromXML(const std::string& iXML, std::string& oErrMssg)
             nextBalise += tmpStr.substr(0, nextFolderEndPos + 9);
             tmpStr = tmpStr.substr(nextFolderEndPos + 9);
 
-            FolderData newFolder("");
+            FolderData newFolder("", "", "");
             if (!newFolder.PopulateFromXML(nextBalise, oErrMssg)){
                 return false;
             }
@@ -150,7 +186,11 @@ bool FolderData::PopulateFromXML(const std::string& iXML, std::string& oErrMssg)
 ////////////////////////////////////////
 
 std::string FolderData::PrintToXML(){
-    std::string xmlLine = "<Folder name=" + GetName()  + ">";
+    std::string xmlLine = "<Folder name=" + GetName()
+                          + " birthTime=" + GetBirthTime()
+                          + " modifiedTime=" + GetModifiedTime()
+                          + ">";
+
     for (std::shared_ptr<Data>& children : GetChildren()){
         xmlLine += children->PrintToXML();
     }
@@ -161,6 +201,7 @@ std::string FolderData::PrintToXML(){
 
 void FolderData::FillTreeView(QTreeWidgetItem * oItem){
     oItem->setText(0, QString::fromStdString(GetName()));
+    oItem->setText(1, QString::fromStdString(GetModifiedTime()));
     oItem->setText(2, "Folder");
     for (std::shared_ptr<Data>& children : GetChildren()){
         QTreeWidgetItem * newChildItem = new QTreeWidgetItem();
@@ -187,15 +228,4 @@ bool FolderData::RemoveEmptyDirectories(){
 }
 ////////////////////////////////////////
 
-//void FolderData::print(){
-//    print("");
-//}
-////////////////////////////////////////
 
-//void FolderData::print(const std::string& iSpacer){
-//    std::cout << iSpacer << GetName() << std::endl;
-//    for (std::shared_ptr<Data>& children : GetChildren()){
-//        children->print(iSpacer + " ");
-//    }
-//}
-////////////////////////////////////////

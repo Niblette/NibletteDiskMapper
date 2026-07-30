@@ -13,7 +13,7 @@ class FolderData: public Data
 {
 public:
 
-    FolderData(const std::string& iName);
+    FolderData(const std::string& iName, const std::string& iBirthTime, const std::string& iModifiedTime);
 
     std::list<std::shared_ptr<Data>>& GetChildren();
     void addChild(std::shared_ptr<Data> iChild);
